@@ -1,15 +1,5 @@
-#include <GL/gl.h>
+#include "common.h"
 
-#include <GL/glut.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <netinet/in.h>
-#include <sys/queue.h>
-
-#define DEFPORT 7777
 #define QUEUE 3
 
 /*dx, dy - global parameters, delta of robot's coordinates. transfered from coordinates from client xml-message*/
