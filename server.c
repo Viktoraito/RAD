@@ -59,6 +59,22 @@ int addClient(int s_sockfd, fd_set *readfds) {
   printf("Adding client...\n");
 }
 
+int removeClient(int fd, fd_set *readfds) {
+  close(fd);
+  FD_CLR(fd, readfds);
+  printf("Removing client...\n");
+}
+
+int retriveData(int fd, int nread) {
+  char *buf = calloc(nread, sizeof(char));
+  read(fd, buf, nread);
+  int xmlfd;
+  mode_t mode = S_IRWXU | S_IRWXG | S_IRWXO;
+  xmlfd = open("reader1.xml", O_WRONLY | O_CREAT, mode);
+  write(xmlfd,buf,nread);
+  close(xmlfd); free(buf);
+}
+
 int listenSocket(int s_sockfd, struct sockaddr_in s_address, int queue) {
   int result, fd, nread;
   fd_set readfds, testfds;
@@ -82,11 +98,11 @@ int listenSocket(int s_sockfd, struct sockaddr_in s_address, int queue) {
 	addClient(s_sockfd, &readfds);
         continue;
       }
-//      ioctl(fd, FIONREAD, &nread);
-//      if(nread)
-//	retriveData(fd, nread);
-//      else
-//	removeclient(fd,&readfds);
+      ioctl(fd, FIONREAD, &nread);
+      if(nread) {
+	retriveData(fd, nread);}
+      else{
+	removeClient(fd,&readfds);}
     }
   }
 }

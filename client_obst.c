@@ -9,7 +9,7 @@ int main(int argc, char **argv)
   int serv_sock;
   serv_sock = socket(AF_INET, SOCK_STREAM, 0);
   if(!conn_serv(serv_sock)) {
-    printf("Can;t connect with server\n");
+    printf("Can't connect with server\n");
     exit(EXIT_FAILURE);
   }
   printf("Successfully connected to server\n");
