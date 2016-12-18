@@ -60,6 +60,47 @@ void timer (int t) {
    glutTimerFunc(100, timer, 0); 	
 }
 
+int listenSocket(int s_sockfd, struct sockaddr_in s_address, int queue) {
+  int result, fd, nread;
+  fd_set readfds, testfds;
+
+  listen(s_sockfd, queue);
+  FD_ZERO(&readfds);
+  FD_SET(s_sockfd, &readfds);
+
+  while(1){
+    testfds = readfds;
+    result = select(FD_SETSIZE, &testfds, (fd_set *)0, (fd_set *)0, (struct timeval *)0);
+    if (result <1) {
+      perror("Server");
+      exit(EXIT_FAILURE);
+    }
+    
+    for(fd=0; fd<FD_SETSIZE; fd++) {
+      if(!FD_ISSET(fd,&testfds))
+	continue;
+      if(fd == s_sockfd) {
+	addClient(s_sockfd, &readfds);
+        continue;
+      }
+//      ioctl(fd, FIONREAD, &nread);
+//      if(nread)
+//	retriveData(fd, nread);
+//      else
+//	removeclient(fd,&readfds);
+    }
+  }
+}
+
+int addClient(int s_sockfd, fd_set *readfds) {
+  int c_len, c_sockfd;
+  struct sockaddr_in c_address;
+  c_len = sizeof(c_address);
+  c_sockfd = accept(s_sockfd, (struct sockaddr *)&c_address, &c_len);
+  FD_SET(c_sockfd, readfds);
+  printf("Adding client...\n");
+}
+
 int main( int argc, char **argv) {
   unsigned port=DEFPORT;
   int s_sockfd;
@@ -73,7 +114,7 @@ int main( int argc, char **argv) {
     printf("Can't bind socket\n");
     return EXIT_FAILURE;
   }
-  else printf("SUCCESS\n");
+  listenSocket(s_sockfd, s_address, QUEUE);
 
 /*   glutInit( &argc, argv );
    glutInitDisplayMode( GLUT_DEPTH| GLUT_DOUBLE | GLUT_RGBA);
