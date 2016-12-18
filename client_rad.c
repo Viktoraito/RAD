@@ -2,7 +2,10 @@
 
 #define MY_ENCODING "ISO-8859-1"
 
-void helloXmlwriterFilename(const char *uri)
+float l_rad,f_rad,r_rad;
+int procIsAsking;
+
+void sendXmlwriterFilename(const char *uri)
 {
   int rc;
   float test=1.0;
@@ -22,12 +25,22 @@ void helloXmlwriterFilename(const char *uri)
         printf("Error at xmlTextWriterStartElement\n");
         return;
     } 
-      rc = xmlTextWriterWriteAttribute(writer, BAD_CAST "Client_type", BAD_CAST "RAD");
+      rc = xmlTextWriterWriteElement(writer, BAD_CAST "TYPE", BAD_CAST "RAD");
       if (rc < 0) {
         printf("Error at xmlTextWriterWriteAttribute\n");
         return;
       }
-      rc = xmlTextWriterWriteAttribute(writer, BAD_CAST "Message", BAD_CAST "HELLO");
+      rc = xmlTextWriterWriteFormatElement(writer, BAD_CAST "LEFT", "%f", l_rad);
+      if (rc < 0) {
+        printf("Error at xmlTextWriterWriteAttribute\n");
+        return;
+      }
+      rc = xmlTextWriterWriteFormatElement(writer, BAD_CAST "FRONT", "%f", f_rad);
+      if (rc < 0) {
+        printf("Error at xmlTextWriterWriteAttribute\n");
+        return;
+      }
+      rc = xmlTextWriterWriteFormatElement(writer, BAD_CAST "RIGHT", "%f", r_rad);
       if (rc < 0) {
         printf("Error at xmlTextWriterWriteAttribute\n");
         return;
@@ -46,22 +59,30 @@ void helloXmlwriterFilename(const char *uri)
     xmlFreeTextWriter(writer);
 }
 
-void *speak(void *argument) {
+sendData(void *argument, char *file){
   int serv_sock = *(int *) argument;
   int result, xmlsize;
   FILE *xmlfd;
   LIBXML_TEST_VERSION
-  helloXmlwriterFilename("writer1.xml");
+  sendXmlwriterFilename(file);
   xmlCleanupParser();
   xmlMemoryDump();
-  xmlfd = fopen("writer1.xml", "rb");
+  xmlfd = fopen(file, "rb");
   fseek(xmlfd, 0L, SEEK_END);
   xmlsize = ftell(xmlfd);
   fseek(xmlfd, 0L, SEEK_SET);
   char *buf = calloc(xmlsize, sizeof(char));
   fread(buf,xmlsize,sizeof(char),xmlfd);
   write(serv_sock, buf, xmlsize);
-  free(xmlfd); free(buf);
+  free(xmlfd); free(buf); 
+}
+
+void *speak(void *argument) {
+  if(procIsAsking){
+    sendData(argument, "radData.xml");
+    printf("Sending client_proc a data\n");
+    procIsAsking=0;
+  }
 }
 
 int conn_serv(int serv_sock) {
@@ -82,6 +103,8 @@ int conn_serv(int serv_sock) {
 
 int main(int argc, char **argv)
 {
+  procIsAsking=0;
+  l_rad=0.0;f_rad=0.0;r_rad=0.0;
   int serv_sock;
   serv_sock = socket(AF_INET, SOCK_STREAM, 0);
   if(!conn_serv(serv_sock)) {

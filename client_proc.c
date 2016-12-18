@@ -50,7 +50,7 @@ void timer (int t) {
    glutTimerFunc(100, timer, 0); 	
 }
 
-void helloXmlwriterFilename(const char *uri)
+void askXmlwriterFilename(const char *uri, char *ask)
 {
   int rc;
   float test=1.0;
@@ -70,12 +70,12 @@ void helloXmlwriterFilename(const char *uri)
         printf("Error at xmlTextWriterStartElement\n");
         return;
     } 
-      rc = xmlTextWriterWriteAttribute(writer, BAD_CAST "Client_type", BAD_CAST "PROC");
+      rc = xmlTextWriterWriteElement(writer, BAD_CAST "TYPE", BAD_CAST "PROC");
       if (rc < 0) {
         printf("Error at xmlTextWriterWriteAttribute\n");
         return;
       }
-      rc = xmlTextWriterWriteAttribute(writer, BAD_CAST "Message", BAD_CAST "HELLO");
+      rc = xmlTextWriterWriteElement(writer, BAD_CAST "ASK", BAD_CAST ask);
       if (rc < 0) {
         printf("Error at xmlTextWriterWriteAttribute\n");
         return;
@@ -94,22 +94,29 @@ void helloXmlwriterFilename(const char *uri)
     xmlFreeTextWriter(writer);
 }
 
-void *speak(void *argument) {
+void ask(void *argument, char *ask, char *file) {
   int serv_sock = *(int *) argument;
   int result, xmlsize;
   FILE *xmlfd;
   LIBXML_TEST_VERSION
-  helloXmlwriterFilename("writer1.xml");
+  askXmlwriterFilename(file, ask);
   xmlCleanupParser();
   xmlMemoryDump();
-  xmlfd = fopen("writer1.xml", "rb");
+  xmlfd = fopen(file, "rb");
   fseek(xmlfd, 0L, SEEK_END);
   xmlsize = ftell(xmlfd);
   fseek(xmlfd, 0L, SEEK_SET);
   char *buf = calloc(xmlsize, sizeof(char));
   fread(buf,xmlsize,sizeof(char),xmlfd);
   write(serv_sock, buf, xmlsize);
-  free(xmlfd); free(buf);
+  free(xmlfd); free(buf); 
+}
+
+void *speak(void *argument) {
+  ask(argument, "RAD", "askrad.xml");
+  printf("Asking client_rad for data\n");
+  ask(argument, "OBST", "askobst.xml");
+  printf("Asking client_obst for data\n");
 }
 
 int conn_serv(int serv_sock) {

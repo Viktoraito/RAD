@@ -14,5 +14,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include <libxml/xpath.h>
 
 #define DEFPORT 7777
