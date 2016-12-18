@@ -50,6 +50,15 @@ void timer (int t) {
    glutTimerFunc(100, timer, 0); 	
 }
 
+int addClient(int s_sockfd, fd_set *readfds) {
+  int c_len, c_sockfd;
+  struct sockaddr_in c_address;
+  c_len = sizeof(c_address);
+  c_sockfd = accept(s_sockfd, (struct sockaddr *)&c_address, &c_len);
+  FD_SET(c_sockfd, readfds);
+  printf("Adding client...\n");
+}
+
 int listenSocket(int s_sockfd, struct sockaddr_in s_address, int queue) {
   int result, fd, nread;
   fd_set readfds, testfds;
@@ -80,15 +89,6 @@ int listenSocket(int s_sockfd, struct sockaddr_in s_address, int queue) {
 //	removeclient(fd,&readfds);
     }
   }
-}
-
-int addClient(int s_sockfd, fd_set *readfds) {
-  int c_len, c_sockfd;
-  struct sockaddr_in c_address;
-  c_len = sizeof(c_address);
-  c_sockfd = accept(s_sockfd, (struct sockaddr *)&c_address, &c_len);
-  FD_SET(c_sockfd, readfds);
-  printf("Adding client...\n");
 }
 
 int main( int argc, char **argv) {
