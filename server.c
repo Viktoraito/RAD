@@ -2,54 +2,6 @@
 
 #define QUEUE 3
 
-/*dx, dy - global parameters, delta of robot's coordinates. transfered from coordinates from client xml-message*/
-float dx=0, dy=0;
-
-void Draw() {
-	float x=-0.5, y=-0.5;
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glBegin(GL_QUADS);
-		glVertex3f(0.05-dx,-0.05,0.0);
-		glVertex3f(0.05-dx,0.05,0.0);
-		glVertex3f(-0.05-dx,0.05,0.0);
-		glVertex3f(-0.05-dx,-0.05,0.0);
-	glEnd();
-/*	switch (c) {
-	case 'a':
-		glTranslatef(-0.05,0,0);
-		c='\0';
-		break;
-	case 'w':
-		glTranslatef(0,0.05,0);
-		c='\0';
-		break;
-	case 's':
-		glTranslatef(0,-0.05,0);
-		c='\0';
-		break;
-	case 'd':
-		glTranslatef(0.05,0,0);
-		c='\0';
-		break;
-	default:
-		break;
-	}*/
-	glBegin(GL_QUADS);
-		glVertex3f(0.05+x+dx,-0.05+y,0.0);
-		glVertex3f(0.05+x+dx,0.05+y,0.0);
-		glVertex3f(-0.05+x+dx,0.05+y,0.0);
-		glVertex3f(-0.05+x+dx,-0.05+y,0.0);
-	glEnd();
-	glutSwapBuffers();
-}
-
-void timer (int t) {
-   dx+=0.01;
-   glutDisplayFunc( Draw );
-   glutPostRedisplay();
-   glutTimerFunc(100, timer, 0); 	
-}
-
 int addClient(int s_sockfd, fd_set *readfds) {
   int c_len, c_sockfd;
   struct sockaddr_in c_address;
@@ -100,7 +52,8 @@ int listenSocket(int s_sockfd, struct sockaddr_in s_address, int queue) {
       }
       ioctl(fd, FIONREAD, &nread);
       if(nread) {
-	retriveData(fd, nread);}
+	retriveData(fd, nread);
+      }
       else{
 	removeClient(fd,&readfds);}
     }
@@ -108,18 +61,6 @@ int listenSocket(int s_sockfd, struct sockaddr_in s_address, int queue) {
 }
 
 int main( int argc, char **argv) {
-  FILE *fmap;
-  fmap = fopen("map", "r");
-  int x,y;
-  fscanf(fmap, "%d", &x);
-  fscanf(fmap, "%d", &y);
-  float map[x][y][2];
-  for(int i=0; i<x; i++)
-    for(int j=0; j<y; j++){
-      fscanf(fmap, "%f", &map[i][j][0]); /*obstacles*/
-      fscanf(fmap, "%f", &map[i][j][1]); /*radiation*/
-    }
-
   unsigned port=DEFPORT;
   int s_sockfd;
   struct sockaddr_in s_address;
@@ -133,12 +74,4 @@ int main( int argc, char **argv) {
     return EXIT_FAILURE;
   }
   listenSocket(s_sockfd, s_address, QUEUE);
-
-/*   glutInit( &argc, argv );
-   glutInitDisplayMode( GLUT_DEPTH| GLUT_DOUBLE | GLUT_RGBA);
-   glutInitWindowSize( 500, 500 );
-   glutInitWindowPosition( 100, 100 );
-   glutCreateWindow( "RAD DEMO" );
-   glutTimerFunc(1, timer, 0);
-   glutMainLoop();*/
 }
