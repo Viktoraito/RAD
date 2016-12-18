@@ -108,6 +108,18 @@ int listenSocket(int s_sockfd, struct sockaddr_in s_address, int queue) {
 }
 
 int main( int argc, char **argv) {
+  FILE *fmap;
+  fmap = fopen("map", "r");
+  int x,y;
+  fscanf(fmap, "%d", &x);
+  fscanf(fmap, "%d", &y);
+  float map[x][y][2];
+  for(int i=0; i<x; i++)
+    for(int j=0; j<y; j++){
+      fscanf(fmap, "%f", &map[i][j][0]); /*obstacles*/
+      fscanf(fmap, "%f", &map[i][j][1]); /*radiation*/
+    }
+
   unsigned port=DEFPORT;
   int s_sockfd;
   struct sockaddr_in s_address;
