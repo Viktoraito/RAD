@@ -74,14 +74,63 @@ sendData(void *argument, char *file){
   char *buf = calloc(xmlsize, sizeof(char));
   fread(buf,xmlsize,sizeof(char),xmlfd);
   write(serv_sock, buf, xmlsize);
-  free(xmlfd); free(buf); 
+  free(xmlfd); free(buf);
+}
+
+void parseAsk(char *xmlfile) {
+  xmlXPathContextPtr context;
+  xmlXPathObjectPtr result;
+  xmlChar *xpath1 = "/DATA/ASK/text()";
+  xmlInitParser ();
+  LIBXML_TEST_VERSION
+  xmlDoc *doc = xmlParseFile (xmlfile);
+  context = xmlXPathNewContext(doc);
+  result = xmlXPathEvalExpression(xpath1, context);
+  if(xmlXPathNodeSetIsEmpty(result->nodesetval)){
+    xmlXPathFreeObject(result);
+    printf("No result for parsing xml package\n");
+  }
+  else {
+    if(result->nodesetval[0].nodeTab[0]->content != NULL) {
+      char *tmp = calloc(sizeof(result->nodesetval[0].nodeTab[0]->content),
+			 sizeof(char));
+      tmp = (char *) result->nodesetval[0].nodeTab[0]->content;
+      if(!strcmp(tmp,"RAD")) 
+        procIsAsking=1;
+    }
+  }    
+}
+
+void readData(int serv_sock, int nread) {
+  char *buf = calloc(nread, sizeof(char));
+  read(serv_sock, buf, nread);
+  int xmlfd;
+  mode_t mode = S_IRWXU | S_IRWXG | S_IRWXO;
+  remove("readerR.xml");
+  xmlfd = open("readerR.xml", O_WRONLY | O_CREAT, mode);
+  write(xmlfd,buf,nread);
+  close(xmlfd); free(buf);
+    parseAsk("readerR.xml");
 }
 
 void *speak(void *argument) {
-  if(procIsAsking){
-    sendData(argument, "radData.xml");
-    printf("Sending client_proc a data\n");
-    procIsAsking=0;
+  while(1) {
+    if(procIsAsking){
+      sendData(argument, "radData.xml");
+      printf("Sending client_proc a data\n");
+      procIsAsking=0;
+    }
+  }
+}
+
+void *hear(void *argument) {
+  int serv_sock = *(int *) argument;
+  int nread;
+  while(1) {
+    ioctl(serv_sock, FIONREAD, &nread);
+      if(nread) {
+       readData(serv_sock, nread);
+    }
   }
 }
 
@@ -98,6 +147,7 @@ int conn_serv(int serv_sock) {
     perror("Connection with server failed");
     return 0;
   }
+  sendData(&serv_sock, "radData.xml");
   return 1;
 }
 
@@ -112,14 +162,14 @@ int main(int argc, char **argv)
     exit(EXIT_FAILURE);
   }
   printf("Successfully connected to server\n");
-  pthread_t speak_t;
+  /*pthread_t speak_t;
   pthread_create(&speak_t, NULL, speak, &serv_sock);
-  pthread_join(speak_t,NULL);
-/*  pthread_t hear_t, speak_t;
+  pthread_join(speak_t,NULL);*/
+  pthread_t hear_t, speak_t;
   pthread_create(&hear_t, NULL, hear, &serv_sock);
   pthread_create(&speak_t, NULL, speak, &serv_sock);
   pthread_join(hear_t, NULL);
-  pthread_join(speak_t,NULL);*/
+  pthread_join(speak_t,NULL);
   exit(EXIT_SUCCESS);
 }
 

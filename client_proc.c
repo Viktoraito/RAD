@@ -96,7 +96,7 @@ void askXmlwriterFilename(const char *uri, char *ask)
 
 void ask(void *argument, char *ask, char *file) {
   int serv_sock = *(int *) argument;
-  int result, xmlsize;
+  int xmlsize;
   FILE *xmlfd;
   LIBXML_TEST_VERSION
   askXmlwriterFilename(file, ask);

@@ -22,15 +22,38 @@ void parseHello(char *xmlfile, int fd) {
       char *tmp = calloc(sizeof(result->nodesetval[0].nodeTab[0]->content),
 			 sizeof(char));
       tmp = (char *) result->nodesetval[0].nodeTab[0]->content;
-      if(!strcmp(tmp,"RAD")) rad_fd=fd;
-      if(!strcmp(tmp,"PROC")) proc_fd=fd;
-      if(!strcmp(tmp,"OBST")) obst_fd=fd;
-      if(!strcmp(tmp,"MOVE")) move_fd=fd;
+      if(!strcmp(tmp,"RAD")) {
+        rad_fd=fd;
+        //printf("RAD_FD=%d\n",rad_fd);
+      }
+      if(!strcmp(tmp,"PROC")) {
+        proc_fd=fd;
+        //printf("PROC_FD=%d\n",proc_fd);
+      }
+      if(!strcmp(tmp,"OBST")) {
+        obst_fd=fd;
+        //printf("OBST_FD=%d\n",obst_fd);
+      }
+      if(!strcmp(tmp,"MOVE")) {
+        move_fd=fd;
+        //printf("MOVE_FD=%d\n",move_fd);
+      }
     }
 }
 
-void askRad(){
-  printf("TODO: write ask to RAD\n");
+void askRad(char *xmlfile){
+  if(rad_fd!=-1) {
+    int xmlsize;
+    FILE *xmlfd;
+    xmlfd = fopen(xmlfile, "rb");
+    fseek(xmlfd, 0L, SEEK_END);
+    xmlsize = ftell(xmlfd);
+    fseek(xmlfd, 0L, SEEK_SET);
+    char *buf = calloc(xmlsize, sizeof(char));
+    fread(buf,xmlsize,sizeof(char),xmlfd);
+    write(rad_fd, buf, xmlsize);
+    free(xmlfd); free(buf); 
+  }
 }
 
 void askObst(){
@@ -56,9 +79,9 @@ void parseAsk(char *xmlfile) {
 			 sizeof(char));
       tmp = (char *) result->nodesetval[0].nodeTab[0]->content;
       if(!strcmp(tmp,"RAD")) 
-	askRad();
+	askRad(xmlfile);
       if(!strcmp(tmp,"OBST"))
-	askObst();
+	askObst(xmlfile);
     }
 }
 
@@ -82,14 +105,17 @@ int retriveData(int fd, int nread) {
   read(fd, buf, nread);
   int xmlfd;
   mode_t mode = S_IRWXU | S_IRWXG | S_IRWXO;
-  xmlfd = open("reader1.xml", O_WRONLY | O_CREAT, mode);
+  remove("readerS.xml");
+  xmlfd = open("readerS.xml", O_WRONLY | O_CREAT, mode);
   write(xmlfd,buf,nread);
   close(xmlfd); free(buf);
   if(rad_fd==-1 || proc_fd==-1 || obst_fd==-1 || move_fd==-1)
-    parseHello("reader1.xml",fd);
+    parseHello("readerS.xml",fd);
+  if(fd==rad_fd && proc_fd!=-1)
+    printf("Answer from RAD recieved\n");
   if(fd==proc_fd)
-    parseAsk("reader1.xml");
-  else if(!(fd==rad_fd || fd==obst_fd || fd==move_fd))
+    parseAsk("readerS.xml");
+  if(!(fd==rad_fd || fd==proc_fd || fd==obst_fd || fd==move_fd))
     printf("Unregistered file descryptor\n");
 }
 
