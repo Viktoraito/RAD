@@ -56,8 +56,19 @@ void askRad(char *xmlfile){
   }
 }
 
-void askObst(){
-  printf("TODO: write ask to OBST\n");
+void askObst(char *xmlfile){
+  if(obst_fd!=-1) {
+    int xmlsize;
+    FILE *xmlfd;
+    xmlfd = fopen(xmlfile, "rb");
+    fseek(xmlfd, 0L, SEEK_END);
+    xmlsize = ftell(xmlfd);
+    fseek(xmlfd, 0L, SEEK_SET);
+    char *buf = calloc(xmlsize, sizeof(char));
+    fread(buf,xmlsize,sizeof(char),xmlfd);
+    write(obst_fd, buf, xmlsize);
+    free(xmlfd); free(buf); 
+  }
 }
 
 void sendAns(char *xmlfile) {
@@ -92,9 +103,9 @@ void parseAsk(char *xmlfile) {
 			 sizeof(char));
       tmp = (char *) result->nodesetval[0].nodeTab[0]->content;
       if(!strcmp(tmp,"RAD")) 
-	askRad(xmlfile);
+	      askRad(xmlfile);
       if(!strcmp(tmp,"OBST"))
-	askObst(xmlfile);
+	      askObst(xmlfile);
     }
 }
 

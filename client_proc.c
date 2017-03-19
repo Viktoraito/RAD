@@ -8,8 +8,8 @@ int AnsRad=0, AnsObst=0;
 /*dx, dy - global parameters, delta of robot's coordinates. transfered from coordinates from client xml-message*/
 float dx=0, dy=0;
 
-/*global parameters for RAD values*/
-float rad_l, rad_f, rad_r;
+/*global parameters for values*/
+float rad_l, rad_f, rad_r, obst_l, obst_f, obst_r;
 
 void Draw() {
 	float x=-0.5, y=-0.5;
@@ -170,6 +170,58 @@ result = xmlXPathEvalExpression(xpath3, context);
   AnsRad=1;
 }
 
+void ansObst(char *xmlfile){
+  xmlXPathContextPtr context;
+  xmlXPathObjectPtr result;
+  xmlChar *xpath1 = "/DATA/LEFT/text()";
+  xmlChar *xpath2 = "/DATA/FRONT/text()";
+  xmlChar *xpath3 = "/DATA/RIGHT/text()";
+  xmlInitParser ();
+  LIBXML_TEST_VERSION
+  xmlDoc *doc = xmlParseFile (xmlfile);
+  context = xmlXPathNewContext(doc);
+  result = xmlXPathEvalExpression(xpath1, context);
+  if(xmlXPathNodeSetIsEmpty(result->nodesetval)){
+    xmlXPathFreeObject(result);
+    printf("No result for parsing xml package\n");
+  }
+  else {
+    if(result->nodesetval[0].nodeTab[0]->content != NULL) {
+      char *tmp = calloc(sizeof(result->nodesetval[0].nodeTab[0]->content),
+			 sizeof(char));
+      tmp = (char *) result->nodesetval[0].nodeTab[0]->content;
+      obst_l = strtod(tmp, NULL);
+    }
+  }
+  result = xmlXPathEvalExpression(xpath2, context);
+  if(xmlXPathNodeSetIsEmpty(result->nodesetval)){
+    xmlXPathFreeObject(result);
+    printf("No result for parsing xml package\n");
+  }
+  else {
+    if(result->nodesetval[0].nodeTab[0]->content != NULL) {
+      char *tmp = calloc(sizeof(result->nodesetval[0].nodeTab[0]->content),
+			 sizeof(char));
+      tmp = (char *) result->nodesetval[0].nodeTab[0]->content;
+      obst_f = strtod(tmp, NULL);
+    }
+  }
+result = xmlXPathEvalExpression(xpath3, context);
+  if(xmlXPathNodeSetIsEmpty(result->nodesetval)){
+    xmlXPathFreeObject(result);
+    printf("No result for parsing xml package\n");
+  }
+  else {
+    if(result->nodesetval[0].nodeTab[0]->content != NULL) {
+      char *tmp = calloc(sizeof(result->nodesetval[0].nodeTab[0]->content),
+			 sizeof(char));
+      tmp = (char *) result->nodesetval[0].nodeTab[0]->content;
+      obst_r = strtod(tmp, NULL);
+    }
+  }
+  AnsObst=1;
+}
+
 void parseAns(char *xmlfile) {
   xmlXPathContextPtr context;
   xmlXPathObjectPtr result;
@@ -190,6 +242,8 @@ void parseAns(char *xmlfile) {
       tmp = (char *) result->nodesetval[0].nodeTab[0]->content;
       if(!strcmp(tmp,"RAD")) 
         ansRad(xmlfile);
+      if(!strcmp(tmp,"OBST"))
+        ansObst(xmlfile);
     }
   }    
 }
@@ -222,10 +276,12 @@ void *speak(void *argument) {
   printf("Asking client_rad for data\n");
   while(!AnsRad) {}
   AnsRad=0;
+  printf("rad_l=%f\trad_f=%f\trad_r=%f\n",rad_l,rad_f,rad_r);
   ask(argument, "OBST", "askobst.xml");
   printf("Asking client_obst for data\n");
   while(!AnsObst) {}
   AnsObst=0;
+  printf("obst_l=%f\tobst_f=%f\tobst_r=%f\n",obst_l,obst_f,obst_r);
 }
 
 int conn_serv(int serv_sock) {
