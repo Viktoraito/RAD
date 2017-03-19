@@ -154,7 +154,7 @@ int conn_serv(int serv_sock) {
 int main(int argc, char **argv)
 {
   procIsAsking=0;
-  l_rad=0.0;f_rad=0.0;r_rad=0.0;
+  l_rad=0.1;f_rad=0.2;r_rad=0.3;
   int serv_sock;
   serv_sock = socket(AF_INET, SOCK_STREAM, 0);
   if(!conn_serv(serv_sock)) {
@@ -162,9 +162,6 @@ int main(int argc, char **argv)
     exit(EXIT_FAILURE);
   }
   printf("Successfully connected to server\n");
-  /*pthread_t speak_t;
-  pthread_create(&speak_t, NULL, speak, &serv_sock);
-  pthread_join(speak_t,NULL);*/
   pthread_t hear_t, speak_t;
   pthread_create(&hear_t, NULL, hear, &serv_sock);
   pthread_create(&speak_t, NULL, speak, &serv_sock);

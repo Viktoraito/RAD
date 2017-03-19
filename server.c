@@ -60,6 +60,19 @@ void askObst(){
   printf("TODO: write ask to OBST\n");
 }
 
+void sendAns(char *xmlfile) {
+  int xmlsize;
+  FILE *xmlfd;
+  xmlfd = fopen(xmlfile, "rb");
+  fseek(xmlfd, 0L, SEEK_END);
+  xmlsize = ftell(xmlfd);
+  fseek(xmlfd, 0L, SEEK_SET);
+  char *buf = calloc(xmlsize, sizeof(char));
+  fread(buf,xmlsize,sizeof(char),xmlfd);
+  write(proc_fd, buf, xmlsize);
+  free(xmlfd); free(buf); 
+}
+
 void parseAsk(char *xmlfile) {
   xmlXPathContextPtr context;
   xmlXPathObjectPtr result;
@@ -111,8 +124,8 @@ int retriveData(int fd, int nread) {
   close(xmlfd); free(buf);
   if(rad_fd==-1 || proc_fd==-1 || obst_fd==-1 || move_fd==-1)
     parseHello("readerS.xml",fd);
-  if(fd==rad_fd && proc_fd!=-1)
-    printf("Answer from RAD recieved\n");
+  if((fd==rad_fd || fd==obst_fd || fd==move_fd) && proc_fd!=-1)
+    sendAns("readerS.xml");
   if(fd==proc_fd)
     parseAsk("readerS.xml");
   if(!(fd==rad_fd || fd==proc_fd || fd==obst_fd || fd==move_fd))

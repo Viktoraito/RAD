@@ -2,8 +2,14 @@
 
 #define MY_ENCODING "ISO-8859-1"
 
+/*Global parameters. If equal to 1, answer was received.*/
+int AnsRad=0, AnsObst=0;
+
 /*dx, dy - global parameters, delta of robot's coordinates. transfered from coordinates from client xml-message*/
 float dx=0, dy=0;
+
+/*global parameters for RAD values*/
+float rad_l, rad_f, rad_r;
 
 void Draw() {
 	float x=-0.5, y=-0.5;
@@ -112,11 +118,114 @@ void ask(void *argument, char *ask, char *file) {
   free(xmlfd); free(buf); 
 }
 
+void ansRad(char *xmlfile){
+  xmlXPathContextPtr context;
+  xmlXPathObjectPtr result;
+  xmlChar *xpath1 = "/DATA/LEFT/text()";
+  xmlChar *xpath2 = "/DATA/FRONT/text()";
+  xmlChar *xpath3 = "/DATA/RIGHT/text()";
+  xmlInitParser ();
+  LIBXML_TEST_VERSION
+  xmlDoc *doc = xmlParseFile (xmlfile);
+  context = xmlXPathNewContext(doc);
+  result = xmlXPathEvalExpression(xpath1, context);
+  if(xmlXPathNodeSetIsEmpty(result->nodesetval)){
+    xmlXPathFreeObject(result);
+    printf("No result for parsing xml package\n");
+  }
+  else {
+    if(result->nodesetval[0].nodeTab[0]->content != NULL) {
+      char *tmp = calloc(sizeof(result->nodesetval[0].nodeTab[0]->content),
+			 sizeof(char));
+      tmp = (char *) result->nodesetval[0].nodeTab[0]->content;
+      rad_l = strtod(tmp, NULL);
+    }
+  }
+  result = xmlXPathEvalExpression(xpath2, context);
+  if(xmlXPathNodeSetIsEmpty(result->nodesetval)){
+    xmlXPathFreeObject(result);
+    printf("No result for parsing xml package\n");
+  }
+  else {
+    if(result->nodesetval[0].nodeTab[0]->content != NULL) {
+      char *tmp = calloc(sizeof(result->nodesetval[0].nodeTab[0]->content),
+			 sizeof(char));
+      tmp = (char *) result->nodesetval[0].nodeTab[0]->content;
+      rad_f = strtod(tmp, NULL);
+    }
+  }
+result = xmlXPathEvalExpression(xpath3, context);
+  if(xmlXPathNodeSetIsEmpty(result->nodesetval)){
+    xmlXPathFreeObject(result);
+    printf("No result for parsing xml package\n");
+  }
+  else {
+    if(result->nodesetval[0].nodeTab[0]->content != NULL) {
+      char *tmp = calloc(sizeof(result->nodesetval[0].nodeTab[0]->content),
+			 sizeof(char));
+      tmp = (char *) result->nodesetval[0].nodeTab[0]->content;
+      rad_r = strtod(tmp, NULL);
+    }
+  }
+  AnsRad=1;
+}
+
+void parseAns(char *xmlfile) {
+  xmlXPathContextPtr context;
+  xmlXPathObjectPtr result;
+  xmlChar *xpath1 = "/DATA/TYPE/text()";
+  xmlInitParser ();
+  LIBXML_TEST_VERSION
+  xmlDoc *doc = xmlParseFile (xmlfile);
+  context = xmlXPathNewContext(doc);
+  result = xmlXPathEvalExpression(xpath1, context);
+  if(xmlXPathNodeSetIsEmpty(result->nodesetval)){
+    xmlXPathFreeObject(result);
+    printf("No result for parsing xml package\n");
+  }
+  else {
+    if(result->nodesetval[0].nodeTab[0]->content != NULL) {
+      char *tmp = calloc(sizeof(result->nodesetval[0].nodeTab[0]->content),
+			 sizeof(char));
+      tmp = (char *) result->nodesetval[0].nodeTab[0]->content;
+      if(!strcmp(tmp,"RAD")) 
+        ansRad(xmlfile);
+    }
+  }    
+}
+
+void readData(int serv_sock, int nread) {
+  char *buf = calloc(nread, sizeof(char));
+  read(serv_sock, buf, nread);
+  int xmlfd;
+  mode_t mode = S_IRWXU | S_IRWXG | S_IRWXO;
+  remove("readerP.xml");
+  xmlfd = open("readerP.xml", O_WRONLY | O_CREAT, mode);
+  write(xmlfd,buf,nread);
+  close(xmlfd); free(buf);
+    parseAns("readerP.xml");
+}
+
+void *hear(void *argument) {
+  int serv_sock = *(int *) argument;
+  int nread;
+  while(1) {
+    ioctl(serv_sock, FIONREAD, &nread);
+      if(nread) {
+       readData(serv_sock, nread);
+    }
+  }  
+}
+
 void *speak(void *argument) {
   ask(argument, "RAD", "askrad.xml");
   printf("Asking client_rad for data\n");
+  while(!AnsRad) {}
+  AnsRad=0;
   ask(argument, "OBST", "askobst.xml");
   printf("Asking client_obst for data\n");
+  while(!AnsObst) {}
+  AnsObst=0;
 }
 
 int conn_serv(int serv_sock) {
@@ -157,14 +266,11 @@ int main(int argc, char **argv)
     exit(EXIT_FAILURE);
   }
   printf("Successfully connected to server\n");
-  pthread_t speak_t;
-  pthread_create(&speak_t, NULL, speak, &serv_sock);
-  pthread_join(speak_t,NULL);
-/*  pthread_t hear_t, speak_t;
+  pthread_t hear_t, speak_t;
   pthread_create(&hear_t, NULL, hear, &serv_sock);
   pthread_create(&speak_t, NULL, speak, &serv_sock);
   pthread_join(hear_t, NULL);
-  pthread_join(speak_t,NULL);*/
+  pthread_join(speak_t,NULL);
   exit(EXIT_SUCCESS);
 
 /*   glutInit( &argc, argv );
