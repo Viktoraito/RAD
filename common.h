@@ -18,3 +18,7 @@
 #include <malloc.h>
 
 #define DEFPORT 7777
+#define L_STEP 444
+#define F_STEP 888
+#define R_STEP 666
+#define STOP 555

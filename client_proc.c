@@ -260,6 +260,41 @@ void readData(int serv_sock, int nread) {
     parseAns("readerP.xml");
 }
 
+int Decision() {
+  if(rad_l==1.0 || rad_f==1.0 || rad_r==1.0)
+    return STOP;
+  int F=0, L=0, R=0;
+  if(rad_f>=rad_l && rad_f>=rad_r) {
+    F+=40; L+=20; R+=20;
+  }
+  if(rad_l>=rad_f && rad_l>=rad_r) {
+    F+=20; L+=40; R+=20;
+  }
+  if(rad_r>=rad_l && rad_r>=rad_f) {
+    F+=20; L+=20; R+=40;
+  }
+  if(obst_f==0.0) F+=60;
+  if(obst_l==0.0) L+=40;
+  if(obst_r==0.0) R+=20;
+  if(obst_f==1.0) {
+    L+=40; R+=40;
+  }
+  if(obst_l==1.0) {
+    F+=20; R+=40;
+  }
+  if(obst_r==1.0) {
+    F+=20; L+=20;
+  }
+  
+  if(F>=L && F>=R)
+    return F_STEP;
+  if(L>=F && L>=R)
+    return L_STEP;
+  if(R>=L && R>=F)
+    return R_STEP;
+  return STOP;
+}
+
 void *hear(void *argument) {
   int serv_sock = *(int *) argument;
   int nread;
@@ -282,6 +317,9 @@ void *speak(void *argument) {
   while(!AnsObst) {}
   AnsObst=0;
   printf("obst_l=%f\tobst_f=%f\tobst_r=%f\n",obst_l,obst_f,obst_r);
+  int dec;
+  dec=Decision();
+  printf("%d\n",dec);
 }
 
 int conn_serv(int serv_sock) {
