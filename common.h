@@ -15,5 +15,6 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <libxml/xpath.h>
+#include <malloc.h>
 
 #define DEFPORT 7777

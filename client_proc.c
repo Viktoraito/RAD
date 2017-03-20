@@ -302,19 +302,6 @@ int conn_serv(int serv_sock) {
 
 int main(int argc, char **argv)
 {
-  FILE *fmap;
-  fmap = fopen("map", "r");
-  int x,y;
-  fscanf(fmap, "%d", &x);
-  fscanf(fmap, "%d", &y);
-  float map[x][y][2];
-  for(int i=0; i<x; i++) {
-    for(int j=0; j<y; j++){
-      fscanf(fmap, "%f", &map[i][j][0]); /*obstacles*/
-      fscanf(fmap, "%f", &map[i][j][1]); /*radiation*/
-    }
-  }
-
   int serv_sock;
   serv_sock = socket(AF_INET, SOCK_STREAM, 0);
   if(!conn_serv(serv_sock)) {

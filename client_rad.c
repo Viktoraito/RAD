@@ -4,9 +4,31 @@
 
 float l_rad,f_rad,r_rad;
 int procIsAsking;
+int x,y;
+float **map;
 
 void sendXmlwriterFilename(const char *uri)
 {
+  FILE *fcoord;
+  fcoord = fopen("coord", "r");
+  int dx,dy;
+  fscanf(fcoord, "%d", &dx);
+  fscanf(fcoord, "%d", &dy);
+  fclose(fcoord);
+  dx--; dy--;
+  if(dx>0)
+    l_rad=map[dy][dx-1];
+  else
+    l_rad=0;
+  if(dy>0)
+    f_rad=map[dy-1][dx];
+  else
+    f_rad=0;
+  if(dx<y-1)
+    r_rad=map[dy][dx+1];
+  else
+    r_rad=0;
+
   int rc;
   float test=1.0;
   xmlTextWriterPtr writer;
@@ -59,7 +81,7 @@ void sendXmlwriterFilename(const char *uri)
     xmlFreeTextWriter(writer);
 }
 
-sendData(void *argument, char *file){
+void sendData(void *argument, char *file){
   int serv_sock = *(int *) argument;
   int result, xmlsize;
   FILE *xmlfd;
@@ -153,8 +175,21 @@ int conn_serv(int serv_sock) {
 
 int main(int argc, char **argv)
 {
+  FILE *fmap;
+  fmap = fopen("map", "r");
+  fscanf(fmap, "%d", &x);
+  fscanf(fmap, "%d", &y);
+  map = (float**)malloc(x * sizeof(float*));
+  float tmp[1];
+  for(int i=0; i<x; i++) {
+    map[i] = (float*)malloc(y * sizeof(float));
+    for(int j=0; j<y; j++){
+      fscanf(fmap, "%f", &tmp[0]); /*obstacles*/
+      fscanf(fmap, "%f", &map[i][j]); /*radiation*/
+    }
+  }
+  fclose(fmap);
   procIsAsking=0;
-  l_rad=0.1;f_rad=0.2;r_rad=0.3;
   int serv_sock;
   serv_sock = socket(AF_INET, SOCK_STREAM, 0);
   if(!conn_serv(serv_sock)) {
@@ -167,6 +202,9 @@ int main(int argc, char **argv)
   pthread_create(&speak_t, NULL, speak, &serv_sock);
   pthread_join(hear_t, NULL);
   pthread_join(speak_t,NULL);
+  for (int i=0; i<x; i++)
+    free(map[i]);
+  free(map);
   exit(EXIT_SUCCESS);
 }
 
