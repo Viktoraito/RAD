@@ -8,6 +8,37 @@ float **map_o; float **map_r;
 
 void testXmlwriterFilename(const char *uri);
 
+void drawObst(float dtx, float dty) {
+  glColor3f(1.0f,1.0f,1.0f);
+  for(int i=0; i<x; i++)
+    for(int j=0; j<y; j++)
+      if(map_o[i][j]==1.0) {
+        glBegin(GL_QUADS);
+          glVertex3f((i+1)*dtx-dtx,(j+1)*dty-dty,0.0f); //upper left
+		      glVertex3f((i+1)*dtx,    (j+1)*dty-dty,0.0f); //upper right
+		      glVertex3f((i+1)*dtx,    (j+1)*dty,    0.0f); //bottom right
+		      glVertex3f((i+1)*dtx-dtx,(j+1)*dty,    0.0f); //bottom left
+        glEnd();
+      }
+}
+
+void drawRad(float dtx, float dty) {
+  float color;
+  for(int i=0; i<x; i++)
+    for(int j=0; j<y; j++) {
+      if(map_r[i][j]>0.0) {
+        glColor3f(1.0f-map_r[i][j],0.0f,0.0f);
+        glBegin(GL_QUADS);
+          glVertex3f((i+1)*dtx-dtx,(j+1)*dty-dty,0.0f); //upper left
+		      glVertex3f((i+1)*dtx,    (j+1)*dty-dty,0.0f); //upper right
+		      glVertex3f((i+1)*dtx,    (j+1)*dty,    0.0f); //bottom right
+		      glVertex3f((i+1)*dtx-dtx,(j+1)*dty,    0.0f); //bottom left
+        glEnd();
+      }
+    }
+}
+
+
 void Draw() {
   int dx, dy;
   FILE *fcoord;
@@ -23,11 +54,15 @@ void Draw() {
 
   float dtx=2.0/x, dty=2.0/y;
 
+  drawObst(dtx, dty);
+  drawRad(dtx, dty);
+
+  glColor3f(0.0f,0.0f,1.0f);
 	glBegin(GL_QUADS);
-		glVertex3f(dx*dtx-dtx,dy*dty-dty,0.01f); //upper left
-		glVertex3f(dx*dtx,    dy*dty-dty,0.01f); //upper right
-		glVertex3f(dx*dtx,    dy*dty,    0.01f); //bottom right
-		glVertex3f(dx*dtx-dtx,dy*dty,    0.01f); //bottom left
+		glVertex3f(dx*dtx-dtx,dy*dty-dty,0.2f); //upper left
+		glVertex3f(dx*dtx,    dy*dty-dty,0.2f); //upper right
+		glVertex3f(dx*dtx,    dy*dty,    0.2f); //bottom right
+		glVertex3f(dx*dtx-dtx,dy*dty,    0.2f); //bottom left
 	glEnd();
 	glutSwapBuffers();
 }
