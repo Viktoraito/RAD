@@ -309,8 +309,10 @@ void *speak(void *argument) {
     int dec;
     dec=Decision();
     printf("dec=%d\n",dec);
-    if(dec==STOP)
+    if(dec==STOP) {
+      ask(argument, "MOVE", "askmove.xml", dec);
       break;
+    }
     ask(argument, "MOVE", "askmove.xml", dec);
     printf("Asking client_move to move\n");
     while(!AnsMove) {}

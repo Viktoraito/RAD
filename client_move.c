@@ -3,7 +3,7 @@
 #define MY_ENCODING "ISO-8859-1"
 
 int procIsAsking;
-int x,y;
+int x,y, dec;
 float **map_o; float **map_r;
 
 void testXmlwriterFilename(const char *uri);
@@ -27,12 +27,15 @@ void drawRad(float dtx, float dty) {
   for(int i=0; i<x; i++)
     for(int j=0; j<y; j++) {
       if(map_r[i][j]>0.0) {
-        glColor3f(1.0f-map_r[i][j],0.0f,0.0f);
+        if(map_r[i][j]<1.0)
+          glColor3f(1.0f-map_r[i][j],0.0f,0.0f);
+        else
+          glColor3f(0.01f,0.0f,0.0f);
         glBegin(GL_QUADS);
-          glVertex3f((i+1)*dtx-dtx,(j+1)*dty-dty,0.0f); //upper left
-		      glVertex3f((i+1)*dtx,    (j+1)*dty-dty,0.0f); //upper right
+          glVertex3f((i+1)*dtx-dtx/2,(j+1)*dty-dty/2,0.0f); //upper left
+		      glVertex3f((i+1)*dtx,    (j+1)*dty-dty/2,0.0f); //upper right
 		      glVertex3f((i+1)*dtx,    (j+1)*dty,    0.0f); //bottom right
-		      glVertex3f((i+1)*dtx-dtx,(j+1)*dty,    0.0f); //bottom left
+		      glVertex3f((i+1)*dtx-dtx/2,(j+1)*dty,    0.0f); //bottom left
         glEnd();
       }
     }
@@ -58,6 +61,8 @@ void Draw() {
   drawRad(dtx, dty);
 
   glColor3f(0.0f,0.0f,1.0f);
+  if(dec==STOP)
+    glColor3f(0.0f,1.0f,0.0f);
 	glBegin(GL_QUADS);
 		glVertex3f(dx*dtx-dtx,dy*dty-dty,0.2f); //upper left
 		glVertex3f(dx*dtx,    dy*dty-dty,0.2f); //upper right
@@ -158,7 +163,7 @@ void move(int dec) {
 }
 
 void parseAsk(char *xmlfile) {
-  int dec=NIHIL;
+  dec=NIHIL;
   xmlXPathContextPtr context;
   xmlXPathObjectPtr result;
   xmlChar *xpath1 = "/DATA/DEC/text()";
