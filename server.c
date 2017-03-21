@@ -41,7 +41,7 @@ void parseHello(char *xmlfile, int fd) {
     }
 }
 
-void askRad(char *xmlfile){
+void askRad(char *xmlfile) {
   if(rad_fd!=-1) {
     int xmlsize;
     FILE *xmlfd;
@@ -56,7 +56,7 @@ void askRad(char *xmlfile){
   }
 }
 
-void askObst(char *xmlfile){
+void askObst(char *xmlfile) {
   if(obst_fd!=-1) {
     int xmlsize;
     FILE *xmlfd;
@@ -67,6 +67,21 @@ void askObst(char *xmlfile){
     char *buf = calloc(xmlsize, sizeof(char));
     fread(buf,xmlsize,sizeof(char),xmlfd);
     write(obst_fd, buf, xmlsize);
+    free(xmlfd); free(buf); 
+  }
+}
+
+void askMove(char *xmlfile) {
+  if(move_fd!=-1) {
+    int xmlsize;
+    FILE *xmlfd;
+    xmlfd = fopen(xmlfile, "rb");
+    fseek(xmlfd, 0L, SEEK_END);
+    xmlsize = ftell(xmlfd);
+    fseek(xmlfd, 0L, SEEK_SET);
+    char *buf = calloc(xmlsize, sizeof(char));
+    fread(buf,xmlsize,sizeof(char),xmlfd);
+    write(move_fd, buf, xmlsize);
     free(xmlfd); free(buf); 
   }
 }
@@ -106,6 +121,8 @@ void parseAsk(char *xmlfile) {
 	      askRad(xmlfile);
       if(!strcmp(tmp,"OBST"))
 	      askObst(xmlfile);
+      if(!strcmp(tmp,"MOVE"))
+        askMove(xmlfile);
     }
 }
 

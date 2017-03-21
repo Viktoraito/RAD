@@ -19,18 +19,17 @@ void sendXmlwriterFilename(const char *uri)
   if(dx>0)
     l_obst=map[dy][dx-1];
   else
-    l_obst=0;
+    l_obst=1.0;
   if(dy>0)
     f_obst=map[dy-1][dx];
   else
-    f_obst=0;
+    f_obst=1.0;
   if(dx<y-1)
     r_obst=map[dy][dx+1];
   else
-    r_obst=0;
+    r_obst=1.0;
 
   int rc;
-  float test=1.0;
   xmlTextWriterPtr writer;
   writer = xmlNewTextWriterFilename(uri, 0);
   if (writer == NULL) {

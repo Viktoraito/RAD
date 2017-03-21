@@ -3,7 +3,7 @@
 #define MY_ENCODING "ISO-8859-1"
 
 /*Global parameters. If equal to 1, answer was received.*/
-int AnsRad=0, AnsObst=0;
+int AnsRad=0, AnsObst=0, AnsMove=0;
 
 /*dx, dy - global parameters, delta of robot's coordinates. transfered from coordinates from client xml-message*/
 float dx=0, dy=0;
@@ -11,52 +11,7 @@ float dx=0, dy=0;
 /*global parameters for values*/
 float rad_l, rad_f, rad_r, obst_l, obst_f, obst_r;
 
-void Draw() {
-	float x=-0.5, y=-0.5;
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glBegin(GL_QUADS);
-		glVertex3f(0.05-dx,-0.05,0.0);
-		glVertex3f(0.05-dx,0.05,0.0);
-		glVertex3f(-0.05-dx,0.05,0.0);
-		glVertex3f(-0.05-dx,-0.05,0.0);
-	glEnd();
-/*	switch (c) {
-	case 'a':
-		glTranslatef(-0.05,0,0);
-		c='\0';
-		break;
-	case 'w':
-		glTranslatef(0,0.05,0);
-		c='\0';
-		break;
-	case 's':
-		glTranslatef(0,-0.05,0);
-		c='\0';
-		break;
-	case 'd':
-		glTranslatef(0.05,0,0);
-		c='\0';
-		break;
-	default:
-		break;
-	}*/
-	glBegin(GL_QUADS);
-		glVertex3f(0.05+x+dx,-0.05+y,0.0);
-		glVertex3f(0.05+x+dx,0.05+y,0.0);
-		glVertex3f(-0.05+x+dx,0.05+y,0.0);
-		glVertex3f(-0.05+x+dx,-0.05+y,0.0);
-	glEnd();
-	glutSwapBuffers();
-}
-
-void timer (int t) {
-   dx+=0.01;
-   glutDisplayFunc( Draw );
-   glutPostRedisplay();
-   glutTimerFunc(100, timer, 0); 	
-}
-
-void askXmlwriterFilename(const char *uri, char *ask)
+void askXmlwriterFilename(const char *uri, char *ask, int code)
 {
   int rc;
   float test=1.0;
@@ -86,6 +41,13 @@ void askXmlwriterFilename(const char *uri, char *ask)
         printf("Error at xmlTextWriterWriteAttribute\n");
         return;
       }
+      if(code!=NIHIL) {
+        rc = xmlTextWriterWriteFormatElement(writer, BAD_CAST "DEC", "%d", code);
+        if (rc < 0) {
+          printf("Error at xmlTextWriterWriteAttribute\n");
+          return;
+        }
+      }
     rc = xmlTextWriterEndElement(writer);
     if (rc < 0) {
       printf("Error at xmlTextWriterEndElement\n");
@@ -100,12 +62,12 @@ void askXmlwriterFilename(const char *uri, char *ask)
     xmlFreeTextWriter(writer);
 }
 
-void ask(void *argument, char *ask, char *file) {
+void ask(void *argument, char *ask, char *file, int code) {
   int serv_sock = *(int *) argument;
   int xmlsize;
   FILE *xmlfd;
   LIBXML_TEST_VERSION
-  askXmlwriterFilename(file, ask);
+  askXmlwriterFilename(file, ask, code);
   xmlCleanupParser();
   xmlMemoryDump();
   xmlfd = fopen(file, "rb");
@@ -222,6 +184,30 @@ result = xmlXPathEvalExpression(xpath3, context);
   AnsObst=1;
 }
 
+void ansMove(char *xmlfile){
+  xmlXPathContextPtr context;
+  xmlXPathObjectPtr result;
+  xmlChar *xpath1 = "/DATA/ANS/text()";
+  xmlInitParser ();
+  LIBXML_TEST_VERSION
+  xmlDoc *doc = xmlParseFile (xmlfile);
+  context = xmlXPathNewContext(doc);
+  result = xmlXPathEvalExpression(xpath1, context);
+  if(xmlXPathNodeSetIsEmpty(result->nodesetval)){
+    xmlXPathFreeObject(result);
+    printf("No result for parsing xml package\n");
+  }
+  else {
+    if(result->nodesetval[0].nodeTab[0]->content != NULL) {
+      char *tmp = calloc(sizeof(result->nodesetval[0].nodeTab[0]->content),
+			 sizeof(char));
+      tmp = (char *) result->nodesetval[0].nodeTab[0]->content;
+      if(!strcmp(tmp,"OK"))
+        AnsMove=1;
+    }
+  }
+}
+
 void parseAns(char *xmlfile) {
   xmlXPathContextPtr context;
   xmlXPathObjectPtr result;
@@ -244,6 +230,8 @@ void parseAns(char *xmlfile) {
         ansRad(xmlfile);
       if(!strcmp(tmp,"OBST"))
         ansObst(xmlfile);
+      if(!strcmp(tmp,"MOVE"))
+        ansMove(xmlfile);
     }
   }    
 }
@@ -307,19 +295,27 @@ void *hear(void *argument) {
 }
 
 void *speak(void *argument) {
-  ask(argument, "RAD", "askrad.xml");
-  printf("Asking client_rad for data\n");
-  while(!AnsRad) {}
-  AnsRad=0;
-  printf("rad_l=%f\trad_f=%f\trad_r=%f\n",rad_l,rad_f,rad_r);
-  ask(argument, "OBST", "askobst.xml");
-  printf("Asking client_obst for data\n");
-  while(!AnsObst) {}
-  AnsObst=0;
-  printf("obst_l=%f\tobst_f=%f\tobst_r=%f\n",obst_l,obst_f,obst_r);
-  int dec;
-  dec=Decision();
-  printf("%d\n",dec);
+  while(1) {
+    ask(argument, "RAD", "askrad.xml", NIHIL);
+    printf("Asking client_rad for data\n");
+    while(!AnsRad) {}
+    AnsRad=0;
+    printf("rad_l=%f\trad_f=%f\trad_r=%f\n",rad_l,rad_f,rad_r);
+    ask(argument, "OBST", "askobst.xml", NIHIL);
+    printf("Asking client_obst for data\n");
+    while(!AnsObst) {}
+    AnsObst=0;
+    printf("obst_l=%f\tobst_f=%f\tobst_r=%f\n",obst_l,obst_f,obst_r);
+    int dec;
+    dec=Decision();
+    printf("dec=%d\n",dec);
+    if(dec==STOP)
+      break;
+    ask(argument, "MOVE", "askmove.xml", dec);
+    printf("Asking client_move to move\n");
+    while(!AnsMove) {}
+    AnsMove=0;
+  }
 }
 
 int conn_serv(int serv_sock) {
@@ -353,14 +349,6 @@ int main(int argc, char **argv)
   pthread_join(hear_t, NULL);
   pthread_join(speak_t,NULL);
   exit(EXIT_SUCCESS);
-
-/*   glutInit( &argc, argv );
-   glutInitDisplayMode( GLUT_DEPTH| GLUT_DOUBLE | GLUT_RGBA);
-   glutInitWindowSize( 500, 500 );
-   glutInitWindowPosition( 100, 100 );
-   glutCreateWindow( "RAD DEMO" );
-   glutTimerFunc(1, timer, 0);
-   glutMainLoop();*/
 }
 
 
