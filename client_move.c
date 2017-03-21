@@ -112,6 +112,29 @@ void sendData(void *argument, char *file){
   free(xmlfd); free(buf);
 }
 
+void move(int dec) {
+  int x, y;
+  FILE *fcoord;
+  fcoord = fopen("coord", "r");
+  fscanf(fcoord, "%d", &x);
+  fscanf(fcoord, "%d", &y);
+  fclose(fcoord);
+  fcoord = fopen("coord", "w");
+  switch(dec) {
+    case L_STEP:
+      x--;
+      break;
+    case F_STEP:
+      y--;
+      break;
+    case R_STEP:
+      x++;
+      break;
+  }
+  fprintf(fcoord,"%d %d",x,y);
+  fclose(fcoord);
+}
+
 void parseAsk(char *xmlfile) {
   int dec=NIHIL;
   xmlXPathContextPtr context;
@@ -135,7 +158,8 @@ void parseAsk(char *xmlfile) {
     }
   }
   if(dec!=NIHIL) {
-    printf("%d\t",dec);
+    move(dec);
+    sleep(5);
     procIsAsking=1;
   }
 }
