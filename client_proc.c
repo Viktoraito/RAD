@@ -248,7 +248,7 @@ void readData(int serv_sock, int nread) {
     parseAns("readerP.xml");
 }
 
-double calculate(char *xmlfile, xmlchar *xpath) {
+double calculate(char *xmlfile, xmlChar *xpath) {
   xmlXPathContextPtr context;
   xmlXPathObjectPtr result;
   xmlInitParser ();
@@ -256,7 +256,7 @@ double calculate(char *xmlfile, xmlchar *xpath) {
   xmlDoc *doc = xmlParseFile (xmlfile);
   context = xmlXPathNewContext(doc);
   result = xmlXPathEvalExpression(xpath, context);
-  if(xmlXPathNodeSetIsEmpty(result1->nodesetval) {
+  if(xmlXPathNodeSetIsEmpty(result->nodesetval)) {
     xmlXPathFreeObject(result);
     printf("No result for parsing xml package\n");
     return 0.0;
@@ -267,6 +267,7 @@ double calculate(char *xmlfile, xmlchar *xpath) {
       tmp = (char *) result->nodesetval[0].nodeTab[0]->content;
       return strtod(tmp, NULL);
     }
+  }
 }
 
 int Decision(char *xmlfile) {
@@ -274,66 +275,66 @@ int Decision(char *xmlfile) {
     return STOP;
   double F=0.0, L=0.0, R=0.0;
   const xmlChar 
-    *F_STEP[]="/DATA/F_STEP", 
-    *L_STEP[]="/DATA/L_STEP",
-    *R_STEP[]="/DATA/R_STEP",
-    *RAD_F[]="/RAD_F/text()",
-    *RAD_L[]="/RAD_L/text()",
-    *RAD_R[]="/RAD_R/text()",
-    *FREE_F[]="/FREE_F/text()",
-    *FREE_L[]="/FREE_L/text()",
-    *FREE_R[]="/FREE_R/text()",
-    *OBST_F[]="/OBST_F/text()",
-    *OBST_L[]="/OBST_L/text()",
-    *OBST_R[]="/OBST_R/text()";
+    *STEP_F="/DATA/F_STEP", 
+    *STEP_L="/DATA/L_STEP",
+    *STEP_R="/DATA/R_STEP",
+    *RAD_F="/RAD_F/text()",
+    *RAD_L="/RAD_L/text()",
+    *RAD_R="/RAD_R/text()",
+    *FREE_F="/FREE_F/text()",
+    *FREE_L="/FREE_L/text()",
+    *FREE_R="/FREE_R/text()",
+    *OBST_F="/OBST_F/text()",
+    *OBST_L="/OBST_L/text()",
+    *OBST_R="/OBST_R/text()";
   
   if(rad_f>=rad_l && rad_f>=rad_r) {
-    F+=calculate(xmlfile,xmlStrncatNew(F_STEP,RAD_F,-1));
-    L+=calculate(xmlfile,xmlStrncatNew(L_STEP,RAD_F,-1));
-    R+=calculate(xmlfile,xmlStrncatNew(R_STEP,RAD_F,-1));
+    F+=calculate(xmlfile,xmlStrncatNew(STEP_F,RAD_F,-1));
+    L+=calculate(xmlfile,xmlStrncatNew(STEP_L,RAD_F,-1));
+    R+=calculate(xmlfile,xmlStrncatNew(STEP_R,RAD_F,-1));
   }
   if(rad_l>=rad_f && rad_l>=rad_r) {
-    F+=calculate(xmlfile,xmlStrncatNew(F_STEP,RAD_L,-1));
-    L+=calculate(xmlfile,xmlStrncatNew(L_STEP,RAD_L,-1));
-    R+=calculate(xmlfile,xmlStrncatNew(R_STEP,RAD_L,-1));
+    F+=calculate(xmlfile,xmlStrncatNew(STEP_F,RAD_L,-1));
+    L+=calculate(xmlfile,xmlStrncatNew(STEP_L,RAD_L,-1));
+    R+=calculate(xmlfile,xmlStrncatNew(STEP_R,RAD_L,-1));
   }
   if(rad_r>=rad_l && rad_r>=rad_f) {
-    F+=calculate(xmlfile,xmlStrncatNew(F_STEP,RAD_R,-1));
-    L+=calculate(xmlfile,xmlStrncatNew(L_STEP,RAD_R,-1));
-    R+=calculate(xmlfile,xmlStrncatNew(R_STEP,RAD_R,-1));
+    F+=calculate(xmlfile,xmlStrncatNew(STEP_F,RAD_R,-1));
+    L+=calculate(xmlfile,xmlStrncatNew(STEP_L,RAD_R,-1));
+    R+=calculate(xmlfile,xmlStrncatNew(STEP_R,RAD_R,-1));
   }
 
   if(obst_f==0.0) {
-    F+=calculate(xmlfile,xmlStrncatNew(F_STEP,FREE_F,-1));
-    L+=calculate(xmlfile,xmlStrncatNew(L_STEP,FREE_F,-1));
-    R+=calculate(xmlfile,xmlStrncatNew(R_STEP,FREE_F,-1));  
+    F+=calculate(xmlfile,xmlStrncatNew(STEP_F,FREE_F,-1));
+    L+=calculate(xmlfile,xmlStrncatNew(STEP_L,FREE_F,-1));
+    R+=calculate(xmlfile,xmlStrncatNew(STEP_R,FREE_F,-1));  
   }
   else {
-    F+=calculate(xmlfile,xmlStrncatNew(F_STEP,OBST_F,-1));
-    L+=calculate(xmlfile,xmlStrncatNew(L_STEP,OBST_F,-1));
-    R+=calculate(xmlfile,xmlStrncatNew(R_STEP,OBST_F,-1));  
+    F+=calculate(xmlfile,xmlStrncatNew(STEP_F,OBST_F,-1));
+    L+=calculate(xmlfile,xmlStrncatNew(STEP_L,OBST_F,-1));
+    R+=calculate(xmlfile,xmlStrncatNew(STEP_R,OBST_F,-1));  
   }
 
   if(obst_l==0.0) {
-    F+=calculate(xmlfile,xmlStrncatNew(F_STEP,FREE_L,-1));
-    L+=calculate(xmlfile,xmlStrncatNew(L_STEP,FREE_L,-1));
-    R+=calculate(xmlfile,xmlStrncatNew(R_STEP,FREE_L,-1));  
+    F+=calculate(xmlfile,xmlStrncatNew(STEP_F,FREE_L,-1));
+    L+=calculate(xmlfile,xmlStrncatNew(STEP_L,FREE_L,-1));
+    R+=calculate(xmlfile,xmlStrncatNew(STEP_R,FREE_L,-1));  
   }
   else {
-    F+=calculate(xmlfile,xmlStrncatNew(F_STEP,OBST_L,-1));
-    L+=calculate(xmlfile,xmlStrncatNew(L_STEP,OBST_L,-1));
-    R+=calculate(xmlfile,xmlStrncatNew(R_STEP,OBST_L,-1));  
+    F+=calculate(xmlfile,xmlStrncatNew(STEP_F,OBST_L,-1));
+    L+=calculate(xmlfile,xmlStrncatNew(STEP_L,OBST_L,-1));
+    R+=calculate(xmlfile,xmlStrncatNew(STEP_R,OBST_L,-1));  
   }
 
   if(obst_r==0.0) {
-    F+=calculate(xmlfile,xmlStrncatNew(F_STEP,FREE_R,-1));
-    L+=calculate(xmlfile,xmlStrncatNew(L_STEP,FREE_R,-1));
-    R+=calculate(xmlfile,xmlStrncatNew(R_STEP,FREE_R,-1));  
+    F+=calculate(xmlfile,xmlStrncatNew(STEP_F,FREE_R,-1));
+    L+=calculate(xmlfile,xmlStrncatNew(STEP_L,FREE_R,-1));
+    R+=calculate(xmlfile,xmlStrncatNew(STEP_R,FREE_R,-1));  
   }
   else {
-    F+=calculate(xmlfile,xmlStrncatNew(F_STEP,OBST_R,-1));
-    L+=calculate(xmlfile,xmlStrncatNew(L_STEP,OBST_R,-1));
-    R+=calculate(xmlfile,xmlStrncatNew(R_STEP,OBST_R,-1));  
+    F+=calculate(xmlfile,xmlStrncatNew(STEP_F,OBST_R,-1));
+    L+=calculate(xmlfile,xmlStrncatNew(STEP_L,OBST_R,-1));
+    R+=calculate(xmlfile,xmlStrncatNew(STEP_R,OBST_R,-1));  
   }
   
   if(F>=L && F>=R)
