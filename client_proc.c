@@ -248,30 +248,92 @@ void readData(int serv_sock, int nread) {
     parseAns("readerP.xml");
 }
 
-int Decision() {
+double calculate(char *xmlfile, xmlchar *xpath) {
+  xmlXPathContextPtr context;
+  xmlXPathObjectPtr result;
+  xmlInitParser ();
+  LIBXML_TEST_VERSION
+  xmlDoc *doc = xmlParseFile (xmlfile);
+  context = xmlXPathNewContext(doc);
+  result = xmlXPathEvalExpression(xpath, context);
+  if(xmlXPathNodeSetIsEmpty(result1->nodesetval) {
+    xmlXPathFreeObject(result);
+    printf("No result for parsing xml package\n");
+    return 0.0;
+  }
+  else {
+    if(result->nodesetval[0].nodeTab[0]->content != NULL) {
+      char *tmp = calloc(sizeof(result->nodesetval[0].nodeTab[0]->content),sizeof(char));
+      tmp = (char *) result->nodesetval[0].nodeTab[0]->content;
+      return strtod(tmp, NULL);
+    }
+}
+
+int Decision(char *xmlfile) {
   if(rad_l==1.0 || rad_f==1.0 || rad_r==1.0)
     return STOP;
-  int F=0, L=0, R=0;
+  double F=0.0, L=0.0, R=0.0;
+  const xmlChar 
+    *F_STEP[]="/DATA/F_STEP", 
+    *L_STEP[]="/DATA/L_STEP",
+    *R_STEP[]="/DATA/R_STEP",
+    *RAD_F[]="/RAD_F/text()",
+    *RAD_L[]="/RAD_L/text()",
+    *RAD_R[]="/RAD_R/text()",
+    *FREE_F[]="/FREE_F/text()",
+    *FREE_L[]="/FREE_L/text()",
+    *FREE_R[]="/FREE_R/text()",
+    *OBST_F[]="/OBST_F/text()",
+    *OBST_L[]="/OBST_L/text()",
+    *OBST_R[]="/OBST_R/text()";
+  
   if(rad_f>=rad_l && rad_f>=rad_r) {
-    F+=40; L+=20; R+=20;
+    F+=calculate(xmlfile,xmlStrncatNew(F_STEP,RAD_F,-1));
+    L+=calculate(xmlfile,xmlStrncatNew(L_STEP,RAD_F,-1));
+    R+=calculate(xmlfile,xmlStrncatNew(R_STEP,RAD_F,-1));
   }
   if(rad_l>=rad_f && rad_l>=rad_r) {
-    F+=20; L+=40; R+=20;
+    F+=calculate(xmlfile,xmlStrncatNew(F_STEP,RAD_L,-1));
+    L+=calculate(xmlfile,xmlStrncatNew(L_STEP,RAD_L,-1));
+    R+=calculate(xmlfile,xmlStrncatNew(R_STEP,RAD_L,-1));
   }
   if(rad_r>=rad_l && rad_r>=rad_f) {
-    F+=20; L+=20; R+=40;
+    F+=calculate(xmlfile,xmlStrncatNew(F_STEP,RAD_R,-1));
+    L+=calculate(xmlfile,xmlStrncatNew(L_STEP,RAD_R,-1));
+    R+=calculate(xmlfile,xmlStrncatNew(R_STEP,RAD_R,-1));
   }
-  if(obst_f==0.0) F+=60;
-  if(obst_l==0.0) L+=40;
-  if(obst_r==0.0) R+=20;
-  if(obst_f==1.0) {
-    L+=40; R+=40;
+
+  if(obst_f==0.0) {
+    F+=calculate(xmlfile,xmlStrncatNew(F_STEP,FREE_F,-1));
+    L+=calculate(xmlfile,xmlStrncatNew(L_STEP,FREE_F,-1));
+    R+=calculate(xmlfile,xmlStrncatNew(R_STEP,FREE_F,-1));  
   }
-  if(obst_l==1.0) {
-    F+=20; R+=40;
+  else {
+    F+=calculate(xmlfile,xmlStrncatNew(F_STEP,OBST_F,-1));
+    L+=calculate(xmlfile,xmlStrncatNew(L_STEP,OBST_F,-1));
+    R+=calculate(xmlfile,xmlStrncatNew(R_STEP,OBST_F,-1));  
   }
-  if(obst_r==1.0) {
-    F+=20; L+=20;
+
+  if(obst_l==0.0) {
+    F+=calculate(xmlfile,xmlStrncatNew(F_STEP,FREE_L,-1));
+    L+=calculate(xmlfile,xmlStrncatNew(L_STEP,FREE_L,-1));
+    R+=calculate(xmlfile,xmlStrncatNew(R_STEP,FREE_L,-1));  
+  }
+  else {
+    F+=calculate(xmlfile,xmlStrncatNew(F_STEP,OBST_L,-1));
+    L+=calculate(xmlfile,xmlStrncatNew(L_STEP,OBST_L,-1));
+    R+=calculate(xmlfile,xmlStrncatNew(R_STEP,OBST_L,-1));  
+  }
+
+  if(obst_r==0.0) {
+    F+=calculate(xmlfile,xmlStrncatNew(F_STEP,FREE_R,-1));
+    L+=calculate(xmlfile,xmlStrncatNew(L_STEP,FREE_R,-1));
+    R+=calculate(xmlfile,xmlStrncatNew(R_STEP,FREE_R,-1));  
+  }
+  else {
+    F+=calculate(xmlfile,xmlStrncatNew(F_STEP,OBST_R,-1));
+    L+=calculate(xmlfile,xmlStrncatNew(L_STEP,OBST_R,-1));
+    R+=calculate(xmlfile,xmlStrncatNew(R_STEP,OBST_R,-1));  
   }
   
   if(F>=L && F>=R)
@@ -307,7 +369,7 @@ void *speak(void *argument) {
     AnsObst=0;
     printf("obst_l=%f\tobst_f=%f\tobst_r=%f\n",obst_l,obst_f,obst_r);
     int dec;
-    dec=Decision();
+    dec=Decision("DATA.xml");
     printf("dec=%d\n",dec);
     if(dec==STOP) {
       ask(argument, "MOVE", "askmove.xml", dec);

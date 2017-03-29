@@ -23,4 +23,4 @@ client_proc.o: client_proc.c
 	gcc -std=gnu99 -c -I/usr/include/libxml2 client_proc.c -lpthread
 
 clean:
-	rm -rf server client_rad client_obst client_move client_proc *.o *.xml
+	rm -rf server client_rad client_obst client_move client_proc *.o
